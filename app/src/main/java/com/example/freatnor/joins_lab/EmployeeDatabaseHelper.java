@@ -8,6 +8,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 import android.database.sqlite.SQLiteQueryBuilder;
 import android.util.Log;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -117,28 +118,49 @@ public class EmployeeDatabaseHelper  extends SQLiteOpenHelper {
 
     public ArrayList<String> getSameCompanyJoins() {
         ArrayList<String> names = new ArrayList<>();
+        ArrayList<String> companies = new ArrayList<>();
         SQLiteDatabase db = getReadableDatabase();
 
         SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
         qb.setTables(EMPLOYEE_TABLE_NAME);
 
-        String query = "SELECT " + EMPLOYEE_TABLE_NAME + "." + COL_FIRST_NAME + ", " + EMPLOYEE_TABLE_NAME
-                + "." + COL_LAST_NAME + ", COUNT(" + JOB_TABLE_NAME
-                + "." + COL_COMPANY + ") FROM " + EMPLOYEE_TABLE_NAME
-                + " JOIN " + JOB_TABLE_NAME + " ON " + JOB_TABLE_NAME + "." + COL_SSN
-                + " = " + EMPLOYEE_TABLE_NAME + "." + COL_SSN + " GROUP BY " + JOB_TABLE_NAME
+        String query = "SELECT " + JOB_TABLE_NAME
+                + "." + COL_COMPANY + " FROM " + JOB_TABLE_NAME
+                + " GROUP BY " + JOB_TABLE_NAME
                 + "." + COL_COMPANY + " HAVING COUNT(" + JOB_TABLE_NAME
                 + "." + COL_COMPANY + ") > 1";
+        Log.d("Join Query", "getSameCompanyJoins: " + query);
         Cursor cursor = db.rawQuery(query, null);
 
         if(cursor.moveToFirst()){
             while(!cursor.isAfterLast()){
-                String name = cursor.getString(cursor.getColumnIndex(COL_FIRST_NAME));
-                name += " " + cursor.getString(cursor.getColumnIndex(COL_LAST_NAME));
-                names.add(name);
-                cursor.moveToNext();
+                companies.add(cursor.getString(cursor.getColumnIndex(COL_COMPANY)));
             }
         }
+
+
+        String[] projection = {COL_FIRST_NAME, COL_LAST_NAME};
+        String selection = JOB_TABLE_NAME+"."+COL_COMPANY+" = ?";
+        for (int i = 1; i < companies.size(); i++) {
+            selection += " OR " + JOB_TABLE_NAME+"."+COL_COMPANY+" = ?";
+        }
+        String[] selectionArgs = (String[]) companies.toArray();
+        SQLiteQueryBuilder qb2 = new SQLiteQueryBuilder();
+        qb2.setTables(EMPLOYEE_TABLE_NAME + " INNER JOIN " + JOB_TABLE_NAME + " ON "
+                + EMPLOYEE_TABLE_NAME + "." + COL_SSN + " = " + JOB_TABLE_NAME + "."
+                + COL_SSN);
+
+        cursor = db.rawQuery(query, selectionArgs);
+
+//        if(cursor.moveToFirst()){
+//            while(!cursor.isAfterLast()){
+//                String name = cursor.getString(cursor.getColumnIndex(COL_FIRST_NAME));
+//                name += " " + cursor.getString(cursor.getColumnIndex(COL_LAST_NAME));
+//                names.add(name);
+//                cursor.moveToNext();
+//            }
+//        }
+        cursor.close();
         return names;
     }
 
