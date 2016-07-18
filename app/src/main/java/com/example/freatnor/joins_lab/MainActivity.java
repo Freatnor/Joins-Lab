@@ -154,7 +154,7 @@ public class MainActivity extends AppCompatActivity {
                                         firstNameBox.getText().toString(), lastNameBox.getText().toString(),
                                         Integer.parseInt(yearOfBirthBox.getText().toString()),
                                         cityBox.getText().toString());
-                                helper.insertRow(employee);
+                                helper.insertRow(employee, null);
                             }
                         })
                         .setNegativeButton("Cancel", null);

@@ -10,12 +10,15 @@ import android.util.Log;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
  * Created by Jonathan Taylor on 7/18/16.
  */
 public class EmployeeDatabaseHelper  extends SQLiteOpenHelper {
+    public static final String EMPLOYEE_RECORDS_DB = "EmployeeRecords.db";
+
     public static final String EMPLOYEE_TABLE_NAME = "employee";
     public static final String COL_SSN = "ssn";
     public static final String COL_FIRST_NAME = "first_name";
@@ -31,7 +34,7 @@ public class EmployeeDatabaseHelper  extends SQLiteOpenHelper {
 
 
     private EmployeeDatabaseHelper(Context context) {
-        super(context, "EmployeeRecords.db", null, 1);
+        super(context, EMPLOYEE_RECORDS_DB, null, 1);
     }
 
     private static EmployeeDatabaseHelper INSTANCE;
@@ -77,8 +80,12 @@ public class EmployeeDatabaseHelper  extends SQLiteOpenHelper {
     private static final String SQL_DELETE_ENTRIES_JOB = "DROP TABLE IF EXISTS " +
             JOB_TABLE_NAME;
 
-    public void insertRow(Employee employee) {
-        SQLiteDatabase db = getWritableDatabase();
+    public void insertRow(Employee employee, SQLiteDatabase db) {
+        boolean needsClose = false;
+        if(db == null){
+            db = getWritableDatabase();
+            needsClose = true;
+        }
         ContentValues values = new ContentValues();
         values.put(COL_SSN, employee.getSSN()); 
         values.put(COL_FIRST_NAME, employee.getFirstName());
@@ -89,10 +96,17 @@ public class EmployeeDatabaseHelper  extends SQLiteOpenHelper {
         catch(Exception e){
             Log.e("Insert", "insertRow: unable to insert because of unique issue", e);
         }
+        if(needsClose){
+            db.close();
+        }
     }
 
-    public void insertRowJob(Job job) {
-        SQLiteDatabase db = getWritableDatabase();
+    public void insertRowJob(Job job, SQLiteDatabase db) {
+        boolean needsClose = false;
+        if(db == null){
+            db = getWritableDatabase();
+            needsClose = true;
+        }
         ContentValues values = new ContentValues();
         values.put(COL_SSN, job.getSSN());
         values.put(COL_COMPANY, job.getCompany());
@@ -102,18 +116,25 @@ public class EmployeeDatabaseHelper  extends SQLiteOpenHelper {
         catch(Exception e){
             Log.e("Insert", "insertRow: unable to insert because of unique issue", e);
         }
+        if(needsClose){
+            db.close();
+        }
     }
 
     public void insertRows(List<Employee> employees){
+        SQLiteDatabase db = getWritableDatabase();
         for (Employee employee : employees) {
-            insertRow(employee);
+            insertRow(employee, db);
         }
+        db.close();
     }
 
     public void insertRowJobs(List<Job> jobs){
+        SQLiteDatabase db = getWritableDatabase();
         for (Job job : jobs) {
-            insertRowJob(job);
+            insertRowJob(job, db);
         }
+        db.close();
     }
 
     public ArrayList<String> getSameCompanyJoins() {
@@ -135,8 +156,12 @@ public class EmployeeDatabaseHelper  extends SQLiteOpenHelper {
         if(cursor.moveToFirst()){
             while(!cursor.isAfterLast()){
                 companies.add(cursor.getString(cursor.getColumnIndex(COL_COMPANY)));
+                Log.d("Join Query", "getSameCompanyJoins: " + cursor.getString(cursor.getColumnIndex(COL_COMPANY)));
+                cursor.moveToNext();
             }
         }
+
+        cursor.close();
 
 
         String[] projection = {COL_FIRST_NAME, COL_LAST_NAME};
@@ -144,23 +169,23 @@ public class EmployeeDatabaseHelper  extends SQLiteOpenHelper {
         for (int i = 1; i < companies.size(); i++) {
             selection += " OR " + JOB_TABLE_NAME+"."+COL_COMPANY+" = ?";
         }
-        String[] selectionArgs = (String[]) companies.toArray();
+        String[] selectionArgs = companies.toArray(new String[]{});
         SQLiteQueryBuilder qb2 = new SQLiteQueryBuilder();
         qb2.setTables(EMPLOYEE_TABLE_NAME + " INNER JOIN " + JOB_TABLE_NAME + " ON "
                 + EMPLOYEE_TABLE_NAME + "." + COL_SSN + " = " + JOB_TABLE_NAME + "."
                 + COL_SSN);
 
-        cursor = db.rawQuery(query, selectionArgs);
+        Cursor cursor2 = qb2.query(db, projection, selection, selectionArgs, null, null, null);
 
-//        if(cursor.moveToFirst()){
-//            while(!cursor.isAfterLast()){
-//                String name = cursor.getString(cursor.getColumnIndex(COL_FIRST_NAME));
-//                name += " " + cursor.getString(cursor.getColumnIndex(COL_LAST_NAME));
-//                names.add(name);
-//                cursor.moveToNext();
-//            }
-//        }
-        cursor.close();
+        if(cursor2.moveToFirst()){
+            while(!cursor2.isAfterLast()){
+                String name = cursor2.getString(cursor2.getColumnIndex(COL_FIRST_NAME));
+                name += " " + cursor2.getString(cursor2.getColumnIndex(COL_LAST_NAME));
+                names.add(name);
+                cursor2.moveToNext();
+            }
+        }
+        cursor2.close();
         return names;
     }
 
