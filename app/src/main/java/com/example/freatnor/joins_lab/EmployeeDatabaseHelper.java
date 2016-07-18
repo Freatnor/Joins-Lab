@@ -5,6 +5,7 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.database.sqlite.SQLiteQueryBuilder;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -118,8 +119,12 @@ public class EmployeeDatabaseHelper  extends SQLiteOpenHelper {
         ArrayList<String> names = new ArrayList<>();
         SQLiteDatabase db = getReadableDatabase();
 
+        SQLiteQueryBuilder qb = new SQLiteQueryBuilder();
+        qb.setTables(EMPLOYEE_TABLE_NAME);
+
         String query = "SELECT " + EMPLOYEE_TABLE_NAME + "." + COL_FIRST_NAME + ", " + EMPLOYEE_TABLE_NAME
-                + "." + COL_LAST_NAME + " FROM " + EMPLOYEE_TABLE_NAME
+                + "." + COL_LAST_NAME + ", COUNT(" + JOB_TABLE_NAME
+                + "." + COL_COMPANY + ") FROM " + EMPLOYEE_TABLE_NAME
                 + " JOIN " + JOB_TABLE_NAME + " ON " + JOB_TABLE_NAME + "." + COL_SSN
                 + " = " + EMPLOYEE_TABLE_NAME + "." + COL_SSN + " GROUP BY " + JOB_TABLE_NAME
                 + "." + COL_COMPANY + " HAVING COUNT(" + JOB_TABLE_NAME

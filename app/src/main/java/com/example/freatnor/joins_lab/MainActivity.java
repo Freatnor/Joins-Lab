@@ -1,10 +1,12 @@
 package com.example.freatnor.joins_lab;
 
 import android.content.Context;
+import android.content.DialogInterface;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
@@ -15,6 +17,8 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CursorAdapter;
+import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 
 import java.util.ArrayList;
@@ -115,8 +119,46 @@ public class MainActivity extends AppCompatActivity {
         fab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                Snackbar.make(view, "Replace with your own action", Snackbar.LENGTH_LONG)
-                        .setAction("Action", null).show();
+
+                LinearLayout layout = new LinearLayout(MainActivity.this);
+                layout.setOrientation(LinearLayout.VERTICAL);
+
+                final EditText firstNameBox = new EditText(MainActivity.this);
+                firstNameBox.setHint("First Name");
+                layout.addView(firstNameBox);
+
+                final EditText lastNameBox = new EditText(MainActivity.this);
+                lastNameBox.setHint("Last Name");
+                layout.addView(lastNameBox);
+
+                final EditText ssnBox = new EditText(MainActivity.this);
+                ssnBox.setHint("SSN");
+                layout.addView(ssnBox);
+
+                final EditText yearOfBirthBox = new EditText(MainActivity.this);
+                yearOfBirthBox.setHint("Year of Birth");
+                layout.addView(yearOfBirthBox);
+
+                final EditText cityBox = new EditText(MainActivity.this);
+                cityBox.setHint("City");
+                layout.addView(cityBox);
+
+                AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+                builder.setTitle("Add new Employee")
+                        .setMessage("Something")
+                        .setView(layout)
+                        .setPositiveButton("Add Employee", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                Employee employee = new Employee(ssnBox.getText().toString(),
+                                        firstNameBox.getText().toString(), lastNameBox.getText().toString(),
+                                        Integer.parseInt(yearOfBirthBox.getText().toString()),
+                                        cityBox.getText().toString());
+                                helper.insertRow(employee);
+                            }
+                        })
+                        .setNegativeButton("Cancel", null);
+                builder.show();
             }
         });
     }
