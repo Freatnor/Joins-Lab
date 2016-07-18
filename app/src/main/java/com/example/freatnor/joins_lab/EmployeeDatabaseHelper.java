@@ -156,33 +156,23 @@ public class EmployeeDatabaseHelper  extends SQLiteOpenHelper {
         return names;
     }
 
+    //It's a list since I thought it was originally going to return all the companies if a tie...
+    //Leaving it as is since even with the LIMIT it works correctly with a list
     public ArrayList<String> getHighestSalaries(){
-        return null;
+        ArrayList<String> names = new ArrayList<>();
+        SQLiteDatabase db = getReadableDatabase();
+
+        String[] columns = {COL_COMPANY};
+
+        Cursor cursor = db.query(JOB_TABLE_NAME, columns, null, null, null, null, COL_SALARY, 1 + "");
+
+        if(cursor.moveToFirst()){
+            while(!cursor.isAfterLast()){
+                names.add(cursor.getString(cursor.getColumnIndex(COL_COMPANY)));
+                cursor.moveToNext();
+            }
+        }
+        return names;
     }
 
-//    //The method is the solution for the independent part of the lesso
-//    public String getFullInformation() {
-//        //TODO: add the code from the lesson.
-//        SQLiteDatabase db = getReadableDatabase();
-//        String result = "";
-//        String query = "SELECT * FROM " + EMPLOYEE_TABLE_NAME
-//                + " JOIN " + DEPARTMENT_TABLE_NAME + " ON " + DEPARTMENT_TABLE_NAME+ "." + COL_EMP_ID
-//                + " = " + EMPLOYEE_TABLE_NAME + "." + COL_ID;
-//        Cursor cursor = db.rawQuery(query, null);
-//
-//        int nameid = cursor.getColumnIndex(COL_NAME);
-//        int ageid = cursor.getColumnIndex(COL_AGE);
-//        int addressid = cursor.getColumnIndex(COL_ADDRESS);
-//        int salaryid = cursor.getColumnIndex(COL_SALARY);
-//        int deptid = cursor.getColumnIndex(COL_DEPARTMENT);
-//
-//        if(cursor.moveToFirst()){
-//            while(!cursor.isAfterLast()){
-//                result += String.format(descripString, cursor.getString(nameid), cursor.getInt(ageid),
-//                        cursor.getString(addressid), cursor.getInt(salaryid), cursor.getString(deptid));
-//                result += "\n";
-//            }
-//        }
-//        return result;
-//    }
 }

@@ -85,7 +85,14 @@ public class MainActivity extends AppCompatActivity {
         });
 
         Button highestSalary = (Button) findViewById(R.id.highest_salary_companies);
-
+        highestSalary.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                ArrayList<String> highestSalaryCompanyNames = helper.getHighestSalaries();
+                mListView.setAdapter(new ArrayAdapter<String>(MainActivity.this,
+                        android.R.layout.simple_list_item_1, highestSalaryCompanyNames));
+            }
+        });
 
 
 
